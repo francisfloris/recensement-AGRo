@@ -1,0 +1,19 @@
+{
+  "name": "agrirecensement",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "Recensement des agriculteurs – serveur central + PWA hors ligne",
+  "dependencies": {
+    "better-sqlite3": "^12.11.1",
+    "express": "^5.3.0",
+    "jspdf": "^4.2.1",
+    "leaflet": "^1.9.4",
+    "qrcode-generator": "^2.0.4"
+  },
+  "private": true
+}

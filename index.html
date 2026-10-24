@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgriRecensement – Recensement des agriculteurs</title>
+<style>
+:root{
+  --vert:#1f7a3f; --vert-f:#145a2d; --vert-c:#e7f4ec; --jaune:#f2b705; --rouge:#c0392b;
+  --gris:#6b7280; --bord:#e5e7eb; --fond:#f5f7f4; --blanc:#fff; --texte:#1f2937;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Segoe UI",Roboto,Arial,sans-serif;background:var(--fond);color:var(--texte);font-size:15px}
+header{background:linear-gradient(135deg,var(--vert-f),var(--vert));color:#fff;padding:14px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+header .logo{width:40px;height:40px;background:var(--jaune);border-radius:10px;display:grid;place-items:center}
+header h1{font-size:19px;font-weight:700}
+header small{display:block;opacity:.85;font-size:12px;font-weight:400}
+nav{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+nav button{background:rgba(255,255,255,.12);color:#fff;border:0;padding:9px 14px;border-radius:8px;cursor:pointer;font-size:14px}
+nav button.actif{background:#fff;color:var(--vert-f);font-weight:600}
+main{max-width:1200px;margin:0 auto;padding:20px}
+.vue{display:none}.vue.actif{display:block}
+h2{font-size:20px;margin-bottom:14px;color:var(--vert-f)}
+h3{font-size:15px;margin-bottom:10px;color:var(--vert-f)}
+.carte{background:var(--blanc);border:1px solid var(--bord);border-radius:12px;padding:18px;margin-bottom:16px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px}
+.stat{background:#fff;border:1px solid var(--bord);border-radius:12px;padding:16px;border-left:5px solid var(--vert)}
+.stat .v{font-size:26px;font-weight:700;color:var(--vert-f)}
+.stat .l{color:var(--gris);font-size:13px}
+.grille2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.barre{display:grid;grid-template-columns:130px 1fr 44px;align-items:center;gap:8px;margin:6px 0;font-size:13px}
+.barre .piste{background:#eef2ee;border-radius:6px;height:16px;overflow:hidden}
+.barre .rempli{background:var(--vert);height:100%;border-radius:6px}
+.barre .n{text-align:right;font-weight:600}
+fieldset{border:1px solid var(--bord);border-radius:12px;padding:16px;margin-bottom:16px;background:#fff}
+legend{font-weight:700;color:var(--vert-f);padding:0 8px}
+.champs{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+label{display:block;font-size:13px;font-weight:600;margin-bottom:4px}
+label .req{color:var(--rouge)}
+input,select,textarea{width:100%;padding:9px 10px;border:1px solid #cfd5cf;border-radius:8px;font-size:14px;background:#fff;font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--vert);border-color:transparent}
+.invalide{border-color:var(--rouge)!important;background:#fff6f5}
+.cases{display:flex;flex-wrap:wrap;gap:8px}
+.cases label{font-weight:400;display:flex;align-items:center;gap:6px;background:var(--vert-c);padding:6px 10px;border-radius:20px;cursor:pointer;margin:0}
+.cases input{width:auto}
+.btn{border:0;padding:10px 16px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.btn-p{background:var(--vert);color:#fff}.btn-p:hover{background:var(--vert-f)}
+.btn-s{background:#fff;color:var(--vert-f);border:1px solid var(--vert)}
+.btn-d{background:var(--rouge);color:#fff}
+.btn-petit{padding:6px 10px;font-size:12px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.outils{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.outils input,.outils select{width:auto;flex:1;min-width:150px}
+.table-wrap{overflow-x:auto;background:#fff;border:1px solid var(--bord);border-radius:12px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{padding:10px;text-align:left;border-bottom:1px solid var(--bord);white-space:nowrap}
+th{background:var(--vert-c);color:var(--vert-f);position:sticky;top:0}
+tr:hover td{background:#fafcfa}
+.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:12px;background:var(--vert-c);color:var(--vert-f)}
+.badge.f{background:#fde8f1;color:#9d174d}
+.photo-zone{display:flex;gap:12px;align-items:center}
+.photo-zone img{width:80px;height:80px;object-fit:cover;border-radius:10px;border:1px solid var(--bord)}
+.avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;background:var(--vert-c);display:inline-grid;place-items:center;font-weight:700;color:var(--vert-f);font-size:13px;vertical-align:middle}
+.modal-fond{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+.modal-fond.ouvert{display:flex}
+.modal{background:#fff;border-radius:14px;max-width:720px;width:100%;max-height:90vh;overflow:auto;padding:22px}
+.fiche{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px 18px;font-size:14px}
+.fiche div span{display:block;color:var(--gris);font-size:12px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:12px 18px;border-radius:8px;opacity:0;transition:.3s;z-index:60;pointer-events:none}
+.toast.vu{opacity:1}
+.alerte{background:#fff8e1;border:1px solid #f2d27a;padding:10px 14px;border-radius:8px;margin-bottom:14px;font-size:13px;display:none}
+.vide{text-align:center;color:var(--gris);padding:30px}
+.pagination{display:flex;gap:6px;justify-content:center;margin-top:12px;align-items:center}
+@media print{header,nav,.outils,.actions,.no-print{display:none!important}.modal-fond{position:static;background:none}.modal{max-height:none}}
+@media (max-width:600px){main{padding:12px}.barre{grid-template-columns:90px 1fr 36px}nav{width:100%}nav button{flex:1}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#145a2d" stroke-width="2.2" stroke-linecap="round"><path d="M12 22V10"/><path d="M12 14c-4 0-6-3-6-7 4 0 6 3 6 7z"/><path d="M12 11c0-4 2-7 6-7 0 4-2 7-6 7z"/></svg>
+  </div>
+  <div><h1>AgriRecensement<small>Recensement des agriculteurs – République du Congo</small></h1></div>
+  <nav>
+    <button data-vue="tableau" class="actif">📊 Tableau de bord</button>
+    <button data-vue="formulaire">➕ Nouvel agriculteur</button>
+    <button data-vue="liste">📋 Liste</button>
+    <button data-vue="donnees">💾 Données</button>
+  </nav>
+</header>
+
+<main>
+  <div class="alerte" id="alerteStockage">⚠️ Le stockage local n'est pas disponible dans cet aperçu : les données seront perdues à la fermeture. Ouvrez le fichier dans un navigateur pour une conservation permanente, ou exportez régulièrement.</div>
+
+  <!-- ============ TABLEAU DE BORD ============ -->
+  <section class="vue actif" id="vue-tableau">
+    <h2>Tableau de bord</h2>
+    <div class="stats" id="stats"></div>
+    <div class="grille2">
+      <div class="carte"><h3>Agriculteurs par département</h3><div id="g-dept"></div></div>
+      <div class="carte"><h3>Principales cultures</h3><div id="g-cultures"></div></div>
+      <div class="carte"><h3>Répartition par sexe</h3><div id="g-sexe"></div></div>
+      <div class="carte"><h3>Tranches d'âge</h3><div id="g-age"></div></div>
+      <div class="carte"><h3>Élevage pratiqué</h3><div id="g-elevage"></div></div>
+      <div class="carte"><h3>Derniers enregistrements</h3><div id="derniers"></div></div>
+    </div>
+  </section>
+
+  <!-- ============ FORMULAIRE ============ -->
+  <section class="vue" id="vue-formulaire">
+    <h2 id="titreForm">Nouvel agriculteur</h2>
+    <form id="form" novalidate>
+      <input type="hidden" name="id">
+      <fieldset>
+        <legend>1. Identité</legend>
+        <div class="champs">
+          <div><label>Nom <span class="req">*</span></label><input name="nom" required></div>
+          <div><label>Prénom(s) <span class="req">*</span></label><input name="prenom" required></div>
+          <div><label>Sexe <span class="req">*</span></label>
+            <select name="sexe" required><option value="">— Choisir —</option><option>Masculin</option><option>Féminin</option></select></div>
+          <div><label>Date de naissance <span class="req">*</span></label><input type="date" name="naissance" required></div>
+          <div><label>N° pièce d'identité (CNI / passeport)</label><input name="piece"></div>
+          <div><label>Téléphone <span class="req">*</span></label><input type="tel" name="telephone" placeholder="06 123 45 67" required></div>
+          <div><label>Situation matrimoniale</label>
+            <select name="matrimonial"><option value="">—</option><option>Célibataire</option><option>Marié(e)</option><option>Union libre</option><option>Veuf(ve)</option><option>Divorcé(e)</option></select></div>
+          <div><label>Nombre de personnes à charge</label><input type="number" min="0" name="charges"></div>
+          <div><label>Niveau d'instruction</label>
+            <select name="instruction"><option value="">—</option><option>Aucun</option><option>Primaire</option><option>Secondaire</option><option>Supérieur</option><option>Formation agricole</option></select></div>
+        </div>
+        <div style="margin-top:12px">
+          <label>Photo de l'agriculteur</label>
+          <div class="photo-zone">
+            <img id="apercuPhoto" alt="" style="display:none">
+            <input type="file" accept="image/*" capture="user" id="photoInput" style="width:auto">
+            <button type="button" class="btn btn-s btn-petit" id="suppPhoto" style="display:none">Retirer</button>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>2. Localisation</legend>
+        <div class="champs">
+          <div><label>Département <span class="req">*</span></label><select name="departement" required id="selDept"></select></div>
+          <div><label>District / Arrondissement <span class="req">*</span></label><input name="district" required></div>
+          <div><label>Village / Quartier <span class="req">*</span></label><input name="village" required></div>
+          <div><label>Latitude</label><input name="lat" type="number" step="any"></div>
+          <div><label>Longitude</label><input name="lng" type="number" step="any"></div>
+          <div style="display:flex;align-items:flex-end"><button type="button" class="btn btn-s" id="btnGPS">📍 Capturer la position GPS</button></div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>3. Exploitation agricole</legend>
+        <div class="champs">
+          <div><label>Superficie totale (ha) <span class="req">*</span></label><input type="number" min="0" step="0.01" name="superficie" required></div>
+          <div><label>Superficie cultivée (ha)</label><input type="number" min="0" step="0.01" name="superficieCultivee"></div>
+          <div><label>Statut foncier</label>
+            <select name="foncier"><option value="">—</option><option>Propriétaire (titre foncier)</option><option>Propriété coutumière</option><option>Location</option><option>Métayage</option><option>Prêt / don</option></select></div>
+          <div><label>Années d'expérience</label><input type="number" min="0" name="experience"></div>
+          <div><label>Type d'activité</label>
+            <select name="activite"><option value="">—</option><option>Activité principale</option><option>Activité secondaire</option></select></div>
+          <div><label>Main-d'œuvre (nb de personnes)</label><input type="number" min="0" name="mainOeuvre"></div>
+          <div><label>Source d'eau</label>
+            <select name="eau"><option value="">—</option><option>Pluie uniquement</option><option>Rivière / marigot</option><option>Puits / forage</option><option>Irrigation aménagée</option></select></div>
+          <div><label>Destination de la production</label>
+            <select name="destination"><option value="">—</option><option>Autoconsommation</option><option>Vente</option><option>Mixte</option></select></div>
+        </div>
+        <div style="margin-top:14px"><label>Cultures pratiquées <span class="req">*</span></label><div class="cases" id="casesCultures"></div></div>
+        <div style="margin-top:14px"><label>Élevage</label><div class="cases" id="casesElevage"></div></div>
+        <div style="margin-top:14px"><label>Équipements</label><div class="cases" id="casesEquip"></div></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>4. Organisation & accompagnement</legend>
+        <div class="champs">
+          <div><label>Membre d'une coopérative / groupement ?</label>
+            <select name="cooperative"><option value="">—</option><option>Oui</option><option>Non</option></select></div>
+          <div><label>Nom de la coopérative</label><input name="nomCooperative"></div>
+          <div><label>Accès au crédit agricole ?</label>
+            <select name="credit"><option value="">—</option><option>Oui</option><option>Non</option></select></div>
+          <div><label>A bénéficié d'un encadrement technique ?</label>
+            <select name="encadrement"><option value="">—</option><option>Oui</option><option>Non</option></select></div>
+          <div><label>Principales difficultés</label>
+            <select name="difficulte"><option value="">—</option><option>Accès aux intrants</option><option>Financement</option><option>Écoulement / transport</option><option>Accès à la terre</option><option>Ravageurs / maladies</option><option>Manque d'équipement</option><option>Climat</option></select></div>
+          <div><label>Nom de l'agent recenseur <span class="req">*</span></label><input name="agent" required></div>
+        </div>
+        <div style="margin-top:12px"><label>Observations</label><textarea name="observations" rows="3"></textarea></div>
+      </fieldset>
+
+      <div class="actions">
+        <button type="button" class="btn btn-s" id="btnAnnuler">Annuler</button>
+        <button type="submit" class="btn btn-p">💾 Enregistrer</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ============ LISTE ============ -->
+  <section class="vue" id="vue-liste">
+    <h2>Liste des agriculteurs recensés</h2>
+    <div class="outils">
+      <input type="search" id="recherche" placeholder="🔍 Rechercher (nom, téléphone, village, ID...)">
+      <select id="fDept"><option value="">Tous les départements</option></select>
+      <select id="fSexe"><option value="">Tous sexes</option><option>Masculin</option><option>Féminin</option></select>
+      <select id="fCulture"><option value="">Toutes cultures</option></select>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th></th><th>ID</th><th>Nom & prénom</th><th>Sexe</th><th>Âge</th><th>Téléphone</th><th>Département</th><th>Village</th><th>Superficie</th><th>Actions</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="pagination"></div>
+  </section>
+
+  <!-- ============ DONNÉES ============ -->
+  <section class="vue" id="vue-donnees">
+    <h2>Gestion des données</h2>
+    <div class="grille2">
+      <div class="carte">
+        <h3>📤 Exporter</h3>
+        <p style="color:var(--gris);font-size:13px;margin-bottom:12px">Téléchargez les données pour les analyser dans Excel ou les transmettre à la coordination.</p>
+        <div class="outils"><button class="btn btn-p" id="expCSV">Exporter en CSV (Excel)</button><button class="btn btn-s" id="expJSON">Sauvegarde JSON</button></div>
+      </div>
+      <div class="carte">
+        <h3>📥 Importer</h3>
+        <p style="color:var(--gris);font-size:13px;margin-bottom:12px">Fusionnez une sauvegarde JSON (ex. : données d'un autre agent recenseur). Les doublons (même ID) sont mis à jour.</p>
+        <input type="file" accept=".json,application/json" id="impJSON">
+      </div>
+      <div class="carte">
+        <h3>🧪 Données de démonstration</h3>
+        <p style="color:var(--gris);font-size:13px;margin-bottom:12px">Ajoute 40 agriculteurs fictifs pour tester l'application.</p>
+        <button class="btn btn-s" id="btnDemo">Générer des données de test</button>
+      </div>
+      <div class="carte">
+        <h3>🗑️ Réinitialiser</h3>
+        <p style="color:var(--gris);font-size:13px;margin-bottom:12px">Supprime définitivement tous les enregistrements de cet appareil.</p>
+        <button class="btn btn-d" id="btnVider">Tout supprimer</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- Modal fiche -->
+<div class="modal-fond" id="modal"><div class="modal" id="modalContenu"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================== CONFIGURATION ================== */
+const DEPARTEMENTS = ["Bouenza","Brazzaville","Congo-Oubangui","Cuvette","Cuvette-Ouest","Djoué-Léfini","Kouilou","Lékoumou","Likouala","Niari","Nkéni-Alima","Plateaux","Pointe-Noire","Pool","Sangha"];
+const CULTURES = ["Manioc","Banane plantain","Arachide","Maïs","Igname","Patate douce","Taro","Haricot","Maraîchage","Riz","Cacao","Café","Palmier à huile","Canne à sucre","Arboriculture fruitière","Piment"];
+const ELEVAGES = ["Volaille","Porcin","Caprin","Ovin","Bovin","Pisciculture","Apiculture","Lapins"];
+const EQUIPEMENTS = ["Houe / machette","Brouette","Pulvérisateur","Motoculteur","Tracteur","Moto-pompe","Décortiqueuse","Moulin / râpe à manioc","Moyen de transport"];
+const CLE = "agri_recensement_v1";
+const PAR_PAGE = 15;
+
+/* ================== STOCKAGE ================== */
+let stockageOK = true, memoire = [];
+try{ localStorage.setItem("__t","1"); localStorage.removeItem("__t"); }catch(e){ stockageOK=false; }
+if(!stockageOK) document.getElementById("alerteStockage").style.display="block";
+function charger(){ if(!stockageOK) return memoire; try{ return JSON.parse(localStorage.getItem(CLE))||[]; }catch(e){ return []; } }
+function sauver(d){ if(!stockageOK){ memoire=d; return; } localStorage.setItem(CLE, JSON.stringify(d)); }
+let donnees = charger();
+
+/* ================== UTILITAIRES ================== */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("vu"); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("vu"),2600); }
+function age(d){ if(!d) return ""; const n=new Date(d), a=new Date(); let x=a.getFullYear()-n.getFullYear(); if(a<new Date(a.getFullYear(),n.getMonth(),n.getDate())) x--; return x; }
+function nouvelId(){ const an=new Date().getFullYear(); const max=donnees.reduce((m,d)=>{const n=parseInt((d.id||"").split("-")[2]);return n>m?n:m},0); return `AGR-${an}-${String(max+1).padStart(5,"0")}`; }
+function initiales(d){ return ((d.prenom||"")[0]||"")+((d.nom||"")[0]||""); }
+function fmt(n){ return Number(n||0).toLocaleString("fr-FR",{maximumFractionDigits:2}); }
+
+/* ================== INITIALISATION FORMULAIRE ================== */
+function remplirSelect(el, items, defaut){ el.innerHTML = (defaut?`<option value="">${defaut}</option>`:"") + items.map(i=>`<option>${i}</option>`).join(""); }
+remplirSelect($("#selDept"), DEPARTEMENTS, "— Choisir —");
+remplirSelect($("#fDept"), DEPARTEMENTS, "Tous les départements");
+remplirSelect($("#fCulture"), CULTURES, "Toutes cultures");
+function cases(id, nom, items){ $(id).innerHTML = items.map(i=>`<label><input type="checkbox" name="${nom}" value="${i}"> ${i}</label>`).join(""); }
+cases("#casesCultures","cultures",CULTURES); cases("#casesElevage","elevage",ELEVAGES); cases("#casesEquip","equipements",EQUIPEMENTS);
+
+/* ================== NAVIGATION ================== */
+function afficher(vue){
+  $$("nav button").forEach(b=>b.classList.toggle("actif", b.dataset.vue===vue));
+  $$(".vue").forEach(v=>v.classList.toggle("actif", v.id==="vue-"+vue));
+  if(vue==="tableau") rendreTableau();
+  if(vue==="liste") rendreListe();
+  window.scrollTo(0,0);
+}
+$$("nav button").forEach(b=>b.onclick=()=>{ if(b.dataset.vue==="formulaire") resetForm(); afficher(b.dataset.vue); });
+
+/* ================== PHOTO ================== */
+let photoData = "";
+$("#photoInput").onchange = e => {
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement("canvas"), max=240, s=Math.min(1,max/Math.max(img.width,img.height));
+      c.width=img.width*s; c.height=img.height*s; c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+      photoData = c.toDataURL("image/jpeg",0.75); majPhoto();
+    };
+    img.src = ev.target.result;
+  };
+  r.readAsDataURL(f);
+};
+function majPhoto(){ const i=$("#apercuPhoto"); i.src=photoData; i.style.display=photoData?"block":"none"; $("#suppPhoto").style.display=photoData?"inline-flex":"none"; }
+$("#suppPhoto").onclick=()=>{ photoData=""; $("#photoInput").value=""; majPhoto(); };
+
+/* ================== GPS ================== */
+$("#btnGPS").onclick = () => {
+  if(!navigator.geolocation) return toast("Géolocalisation non disponible sur cet appareil");
+  toast("Recherche de la position…");
+  navigator.geolocation.getCurrentPosition(
+    p => { $("[name=lat]").value=p.coords.latitude.toFixed(6); $("[name=lng]").value=p.coords.longitude.toFixed(6); toast(`Position capturée (±${Math.round(p.coords.accuracy)} m)`); },
+    () => toast("Impossible d'obtenir la position. Saisissez-la manuellement."),
+    {enableHighAccuracy:true, timeout:15000}
+  );
+};
+
+/* ================== FORMULAIRE ================== */
+const form = $("#form");
+function resetForm(){ form.reset(); form.id.value=""; photoData=""; majPhoto(); $$(".invalide").forEach(e=>e.classList.remove("invalide")); $("#titreForm").textContent="Nouvel agriculteur"; }
+$("#btnAnnuler").onclick = () => { resetForm(); afficher("liste"); };
+
+function valider(){
+  let ok = true; $$(".invalide").forEach(e=>e.classList.remove("invalide"));
+  form.querySelectorAll("[required]").forEach(el=>{ if(!el.value.trim()){ el.classList.add("invalide"); ok=false; } });
+  const tel = form.telephone.value.replace(/\s/g,"");
+  if(tel && !/^(\+?242)?0?[456]\d{7}$/.test(tel)){ form.telephone.classList.add("invalide"); ok=false; toast("Numéro de téléphone invalide (ex. 06 123 45 67)"); return false; }
+  if(form.naissance.value){ const a=age(form.naissance.value); if(a<10||a>110){ form.naissance.classList.add("invalide"); toast("Date de naissance incohérente"); return false; } }
+  const sc=parseFloat(form.superficieCultivee.value), st=parseFloat(form.superficie.value);
+  if(!isNaN(sc)&&!isNaN(st)&&sc>st){ form.superficieCultivee.classList.add("invalide"); toast("La superficie cultivée dépasse la superficie totale"); return false; }
+  if(!form.querySelector("[name=cultures]:checked")){ $("#casesCultures").classList.add("invalide"); toast("Sélectionnez au moins une culture"); return false; }
+  if(!ok) toast("Veuillez remplir les champs obligatoires (*)");
+  return ok;
+}
+
+form.onsubmit = e => {
+  e.preventDefault();
+  if(!valider()) return;
+  const fd = new FormData(form), o = {};
+  for(const [k,v] of fd.entries()){ if(["cultures","elevage","equipements"].includes(k)) (o[k]=o[k]||[]).push(v); else o[k]=v.trim(); }
+  ["cultures","elevage","equipements"].forEach(k=>o[k]=o[k]||[]);
+  o.photo = photoData;
+  // doublon téléphone
+  const dbl = donnees.find(d=>d.telephone.replace(/\s/g,"")===o.telephone.replace(/\s/g,"") && d.id!==o.id);
+  if(dbl && !confirm(`Le numéro ${o.telephone} est déjà utilisé par ${dbl.prenom} ${dbl.nom} (${dbl.id}). Enregistrer quand même ?`)) return;
+  if(o.id){
+    const i = donnees.findIndex(d=>d.id===o.id);
+    o.dateCreation = donnees[i].dateCreation; o.dateModification = new Date().toISOString();
+    donnees[i] = o; toast("✅ Fiche mise à jour");
+  } else {
+    o.id = nouvelId(); o.dateCreation = new Date().toISOString();
+    donnees.push(o); toast(`✅ Agriculteur enregistré : ${o.id}`);
+  }
+  sauver(donnees); resetForm(); afficher("liste");
+};
+
+function editer(id){
+  const d = donnees.find(x=>x.id===id); if(!d) return;
+  resetForm(); fermerModal();
+  Object.entries(d).forEach(([k,v])=>{
+    if(Array.isArray(v)) form.querySelectorAll(`[name=${k}]`).forEach(c=>c.checked=v.includes(c.value));
+    else if(form.elements[k] && form.elements[k].type!=="file") form.elements[k].value=v??"";
+  });
+  photoData = d.photo||""; majPhoto();
+  $("#titreForm").textContent = `Modifier : ${d.prenom} ${d.nom} (${d.id})`;
+  afficher("formulaire");
+}
+function supprimer(id){
+  const d = donnees.find(x=>x.id===id);
+  if(!confirm(`Supprimer définitivement ${d.prenom} ${d.nom} (${id}) ?`)) return;
+  donnees = donnees.filter(x=>x.id!==id); sauver(donnees); fermerModal(); rendreListe(); toast("Fiche supprimée");
+}
+
+/* ================== LISTE ================== */
+let page = 1;
+function filtrer(){
+  const q=$("#recherche").value.toLowerCase().trim(), dp=$("#fDept").value, sx=$("#fSexe").value, cu=$("#fCulture").value;
+  return donnees.filter(d=>
+    (!dp||d.departement===dp)&&(!sx||d.sexe===sx)&&(!cu||(d.cultures||[]).includes(cu))&&
+    (!q||[d.id,d.nom,d.prenom,d.telephone,d.village,d.district,d.piece].join(" ").toLowerCase().includes(q))
+  ).sort((a,b)=>b.dateCreation.localeCompare(a.dateCreation));
+}
+function rendreListe(){
+  const liste = filtrer(), nbP = Math.max(1,Math.ceil(liste.length/PAR_PAGE));
+  if(page>nbP) page=nbP;
+  const tranche = liste.slice((page-1)*PAR_PAGE, page*PAR_PAGE);
+  $("#tbody").innerHTML = tranche.length ? tranche.map(d=>`
+    <tr>
+      <td>${d.photo?`<img class="avatar" src="${d.photo}">`:`<span class="avatar">${esc(initiales(d))}</span>`}</td>
+      <td><b>${esc(d.id)}</b></td>
+      <td>${esc(d.nom.toUpperCase())} ${esc(d.prenom)}</td>
+      <td><span class="badge ${d.sexe==="Féminin"?"f":""}">${d.sexe==="Féminin"?"F":"M"}</span></td>
+      <td>${age(d.naissance)} ans</td>
+      <td>${esc(d.telephone)}</td>
+      <td>${esc(d.departement)}</td>
+      <td>${esc(d.village)}</td>
+      <td>${fmt(d.superficie)} ha</td>
+      <td>
+        <button class="btn btn-s btn-petit" onclick="voir('${d.id}')">Voir</button>
+        <button class="btn btn-s btn-petit" onclick="editer('${d.id}')">✏️</button>
+        <button class="btn btn-d btn-petit" onclick="supprimer('${d.id}')">🗑</button>
+      </td>
+    </tr>`).join("") : `<tr><td colspan="10" class="vide">Aucun agriculteur trouvé.</td></tr>`;
+  $("#pagination").innerHTML = liste.length>PAR_PAGE ? `
+    <button class="btn btn-s btn-petit" ${page<=1?"disabled":""} onclick="page--;rendreListe()">‹ Préc.</button>
+    <span>Page ${page} / ${nbP} — ${liste.length} résultat(s)</span>
+    <button class="btn btn-s btn-petit" ${page>=nbP?"disabled":""} onclick="page++;rendreListe()">Suiv. ›</button>` : `<span style="color:var(--gris);font-size:13px">${liste.length} résultat(s)</span>`;
+}
+["#recherche","#fDept","#fSexe","#fCulture"].forEach(s=>$(s).addEventListener("input",()=>{page=1;rendreListe();}));
+
+/* ================== FICHE DÉTAILLÉE ================== */
+function voir(id){
+  const d = donnees.find(x=>x.id===id); if(!d) return;
+  const ch = (l,v)=>`<div><span>${l}</span>${esc(Array.isArray(v)?(v.join(", ")||"—"):(v||"—"))}</div>`;
+  $("#modalContenu").innerHTML = `
+    <div style="display:flex;gap:14px;align-items:center;margin-bottom:16px">
+      ${d.photo?`<img src="${d.photo}" style="width:80px;height:80px;border-radius:12px;object-fit:cover">`:`<span class="avatar" style="width:70px;height:70px;font-size:24px">${esc(initiales(d))}</span>`}
+      <div><h2 style="margin:0">${esc(d.nom.toUpperCase())} ${esc(d.prenom)}</h2><span class="badge">${esc(d.id)}</span>
+      <div style="color:var(--gris);font-size:12px;margin-top:4px">Recensé le ${new Date(d.dateCreation).toLocaleDateString("fr-FR")} par ${esc(d.agent)}</div></div>
+    </div>
+    <h3>Identité</h3><div class="fiche">
+      ${ch("Sexe",d.sexe)}${ch("Date de naissance",d.naissance?new Date(d.naissance).toLocaleDateString("fr-FR")+` (${age(d.naissance)} ans)`:"")}
+      ${ch("Téléphone",d.telephone)}${ch("Pièce d'identité",d.piece)}${ch("Situation matrimoniale",d.matrimonial)}${ch("Personnes à charge",d.charges)}${ch("Instruction",d.instruction)}
+    </div><br>
+    <h3>Localisation</h3><div class="fiche">
+      ${ch("Département",d.departement)}${ch("District",d.district)}${ch("Village / quartier",d.village)}${ch("Coordonnées GPS",d.lat&&d.lng?`${d.lat}, ${d.lng}`:"")}
+    </div><br>
+    <h3>Exploitation</h3><div class="fiche">
+      ${ch("Superficie totale",d.superficie?fmt(d.superficie)+" ha":"")}${ch("Superficie cultivée",d.superficieCultivee?fmt(d.superficieCultivee)+" ha":"")}
+      ${ch("Statut foncier",d.foncier)}${ch("Expérience",d.experience?d.experience+" ans":"")}${ch("Type d'activité",d.activite)}${ch("Main-d'œuvre",d.mainOeuvre)}
+      ${ch("Source d'eau",d.eau)}${ch("Destination",d.destination)}${ch("Cultures",d.cultures)}${ch("Élevage",d.elevage)}${ch("Équipements",d.equipements)}
+    </div><br>
+    <h3>Organisation</h3><div class="fiche">
+      ${ch("Coopérative",d.cooperative==="Oui"?"Oui – "+(d.nomCooperative||""):d.cooperative)}${ch("Accès au crédit",d.credit)}${ch("Encadrement technique",d.encadrement)}${ch("Difficulté principale",d.difficulte)}
+    </div>
+    ${d.observations?`<br><h3>Observations</h3><p>${esc(d.observations)}</p>`:""}
+    <div class="actions no-print" style="margin-top:20px">
+      <button class="btn btn-s" onclick="window.print()">🖨 Imprimer</button>
+      <button class="btn btn-s" onclick="editer('${d.id}')">✏️ Modifier</button>
+      <button class="btn btn-d" onclick="supprimer('${d.id}')">Supprimer</button>
+      <button class="btn btn-p" onclick="fermerModal()">Fermer</button>
+    </div>`;
+  $("#modal").classList.add("ouvert");
+}
+function fermerModal(){ $("#modal").classList.remove("ouvert"); }
+$("#modal").onclick = e => { if(e.target.id==="modal") fermerModal(); };
+document.addEventListener("keydown", e=>{ if(e.key==="Escape") fermerModal(); });
+
+/* ================== TABLEAU DE BORD ================== */
+function compter(fn){ const c={}; donnees.forEach(d=>{ [].concat(fn(d)).forEach(k=>{ if(k) c[k]=(c[k]||0)+1; }); }); return Object.entries(c).sort((a,b)=>b[1]-a[1]); }
+function barres(el, entrees, max=8, couleur){
+  if(!entrees.length){ $(el).innerHTML=`<div class="vide">Aucune donnée</div>`; return; }
+  const m = Math.max(...entrees.map(e=>e[1]));
+  $(el).innerHTML = entrees.slice(0,max).map(([k,v])=>`
+    <div class="barre"><span title="${esc(k)}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(k)}</span>
+    <div class="piste"><div class="rempli" style="width:${v/m*100}%;${couleur?`background:${couleur}`:""}"></div></div><span class="n">${v}</span></div>`).join("");
+}
+function rendreTableau(){
+  const n = donnees.length, sup = donnees.reduce((s,d)=>s+(parseFloat(d.superficie)||0),0);
+  const fem = donnees.filter(d=>d.sexe==="Féminin").length;
+  const coop = donnees.filter(d=>d.cooperative==="Oui").length;
+  const jeunes = donnees.filter(d=>age(d.naissance)<=35).length;
+  const pct = x => n?Math.round(x/n*100)+" %":"—";
+  $("#stats").innerHTML = [
+    [n,"Agriculteurs recensés"],[fmt(sup)+" ha","Superficie totale"],[n?fmt(sup/n)+" ha":"—","Superficie moyenne"],
+    [pct(fem),"Femmes"],[pct(jeunes),"Jeunes (≤ 35 ans)"],[pct(coop),"Membres de coopérative"]
+  ].map(([v,l])=>`<div class="stat"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("");
+  barres("#g-dept", compter(d=>d.departement), 15);
+  barres("#g-cultures", compter(d=>d.cultures), 10, "#d99a00");
+  barres("#g-sexe", compter(d=>d.sexe), 2, "#2563eb");
+  const tr = a => a<25?"Moins de 25 ans":a<36?"25 – 35 ans":a<50?"36 – 49 ans":a<65?"50 – 64 ans":"65 ans et +";
+  const ordre = ["Moins de 25 ans","25 – 35 ans","36 – 49 ans","50 – 64 ans","65 ans et +"];
+  const ages = compter(d=>d.naissance?tr(age(d.naissance)):null).sort((a,b)=>ordre.indexOf(a[0])-ordre.indexOf(b[0]));
+  barres("#g-age", ages, 5, "#7c3aed");
+  barres("#g-elevage", compter(d=>d.elevage), 8, "#b45309");
+  const der = [...donnees].sort((a,b)=>b.dateCreation.localeCompare(a.dateCreation)).slice(0,5);
+  $("#derniers").innerHTML = der.length ? der.map(d=>`
+    <div style="display:flex;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--bord);cursor:pointer" onclick="voir('${d.id}')">
+      ${d.photo?`<img class="avatar" src="${d.photo}">`:`<span class="avatar">${esc(initiales(d))}</span>`}
+      <div style="flex:1"><b>${esc(d.prenom)} ${esc(d.nom)}</b><div style="font-size:12px;color:var(--gris)">${esc(d.village)}, ${esc(d.departement)}</div></div>
+      <span style="font-size:12px;color:var(--gris)">${new Date(d.dateCreation).toLocaleDateString("fr-FR")}</span>
+    </div>`).join("") : `<div class="vide">Aucun enregistrement.<br><br><button class="btn btn-p" onclick="resetForm();afficher('formulaire')">➕ Recenser un agriculteur</button></div>`;
+}
+
+/* ================== IMPORT / EXPORT ================== */
+function telecharger(nom, contenu, type){ const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([contenu],{type})); a.download=nom; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000); }
+const dateFichier = () => new Date().toISOString().slice(0,10);
+$("#expCSV").onclick = () => {
+  if(!donnees.length) return toast("Aucune donnée à exporter");
+  const cols = [["id","ID"],["nom","Nom"],["prenom","Prénom"],["sexe","Sexe"],["naissance","Date naissance"],["age","Âge"],["piece","Pièce identité"],["telephone","Téléphone"],["matrimonial","Situation matrimoniale"],["charges","Personnes à charge"],["instruction","Instruction"],["departement","Département"],["district","District"],["village","Village"],["lat","Latitude"],["lng","Longitude"],["superficie","Superficie (ha)"],["superficieCultivee","Superficie cultivée (ha)"],["foncier","Statut foncier"],["experience","Expérience (ans)"],["activite","Activité"],["mainOeuvre","Main-d'œuvre"],["eau","Source d'eau"],["destination","Destination"],["cultures","Cultures"],["elevage","Élevage"],["equipements","Équipements"],["cooperative","Coopérative"],["nomCooperative","Nom coopérative"],["credit","Crédit"],["encadrement","Encadrement"],["difficulte","Difficulté"],["agent","Agent recenseur"],["observations","Observations"],["dateCreation","Date recensement"]];
+  const cel = v => `"${String(v??"").replace(/"/g,'""')}"`;
+  const lignes = [cols.map(c=>cel(c[1])).join(";")].concat(donnees.map(d=>cols.map(([k])=>{
+    let v = k==="age"?age(d.naissance):d[k]; if(Array.isArray(v)) v=v.join(", "); return cel(v);
+  }).join(";")));
+  telecharger(`recensement_agriculteurs_${dateFichier()}.csv`, "\uFEFF"+lignes.join("\r\n"), "text/csv;charset=utf-8");
+  toast("Export CSV téléchargé");
+};
+$("#expJSON").onclick = () => { if(!donnees.length) return toast("Aucune donnée à exporter"); telecharger(`sauvegarde_recensement_${dateFichier()}.json`, JSON.stringify(donnees,null,1), "application/json"); toast("Sauvegarde téléchargée"); };
+$("#impJSON").onchange = e => {
+  const f = e.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try{
+      const imp = JSON.parse(ev.target.result); if(!Array.isArray(imp)) throw 0;
+      let aj=0, maj=0;
+      imp.forEach(o=>{ if(!o.id||!o.nom) return; const i=donnees.findIndex(d=>d.id===o.id); if(i>=0){donnees[i]=o;maj++;} else {donnees.push(o);aj++;} });
+      sauver(donnees); toast(`Import réussi : ${aj} ajouté(s), ${maj} mis à jour`);
+    }catch(err){ toast("Fichier invalide"); }
+    e.target.value="";
+  };
+  r.readAsText(f);
+};
+$("#btnVider").onclick = () => {
+  if(!donnees.length) return toast("Aucune donnée");
+  if(prompt(`Pour supprimer les ${donnees.length} enregistrements, tapez SUPPRIMER`)!=="SUPPRIMER") return;
+  donnees=[]; sauver(donnees); toast("Toutes les données ont été supprimées");
+};
+
+/* ================== DONNÉES DE DÉMO ================== */
+$("#btnDemo").onclick = () => {
+  const noms=["Mabiala","Nkounkou","Moukoko","Loubaki","Massamba","Ngoma","Bouanga","Mavoungou","Tchibinda","Okemba","Ibara","Ondongo","Malonga","Batchi","Mpika","Kimbembe"];
+  const pH=["Jean","Pierre","Alain","Serge","Gildas","Rodrigue","Brice","Fulbert","Armel","Christ"], pF=["Marie","Grâce","Clarisse","Mireille","Prisca","Bénédicte","Nadège","Chantal","Josiane","Ornella"];
+  const vill={"Kouilou":["Hinda","Loango","Madingo-Kayes","Tchiamba-Nzassi"],"Pointe-Noire":["Tchiamba","Mongo-Mpoukou","Ngoyo"],"Niari":["Dolisie","Kibangou","Louvakou"],"Bouenza":["Nkayi","Madingou","Loudima"],"Pool":["Kinkala","Mindouli","Boko"],"Plateaux":["Djambala","Gamboma","Lékana"],"Lékoumou":["Sibiti","Zanaga"],"Cuvette":["Owando","Oyo","Boundji"],"Sangha":["Ouesso","Pokola"]};
+  const r=a=>a[Math.floor(Math.random()*a.length)], ri=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+  const sous=(a,n)=>[...a].sort(()=>Math.random()-.5).slice(0,n);
+  for(let i=0;i<40;i++){
+    const sexe=Math.random()<.45?"Féminin":"Masculin", dp=r(Object.keys(vill)), sup=+(Math.random()*8+0.25).toFixed(2);
+    const date=new Date(Date.now()-ri(0,60)*864e5);
+    const coop=Math.random()<.4?"Oui":"Non";
+    donnees.push({
+      id:nouvelId(), nom:r(noms), prenom:r(sexe==="Féminin"?pF:pH), sexe,
+      naissance:`${ri(1955,2004)}-${String(ri(1,12)).padStart(2,"0")}-${String(ri(1,28)).padStart(2,"0")}`,
+      piece:"", telephone:`0${r(["5","6"])} ${ri(100,999)} ${ri(10,99)} ${ri(10,99)}`, matrimonial:r(["Marié(e)","Célibataire","Union libre","Veuf(ve)"]),
+      charges:String(ri(0,9)), instruction:r(["Aucun","Primaire","Secondaire","Supérieur"]),
+      departement:dp, district:r(vill[dp]), village:r(vill[dp]), lat:"", lng:"",
+      superficie:String(sup), superficieCultivee:String(+(sup*(.4+Math.random()*.6)).toFixed(2)),
+      foncier:r(["Propriété coutumière","Location","Propriétaire (titre foncier)","Prêt / don"]), experience:String(ri(1,35)),
+      activite:r(["Activité principale","Activité secondaire"]), mainOeuvre:String(ri(1,8)), eau:r(["Pluie uniquement","Rivière / marigot","Puits / forage"]),
+      destination:r(["Vente","Mixte","Autoconsommation"]),
+      cultures:["Manioc",...sous(CULTURES.slice(1),ri(0,3))].filter((v,i,a)=>a.indexOf(v)===i),
+      elevage:Math.random()<.5?sous(ELEVAGES,ri(1,2)):[], equipements:["Houe / machette",...sous(EQUIPEMENTS.slice(1),ri(0,2))],
+      cooperative:coop, nomCooperative:coop==="Oui"?r(["Coop Mbongui","GIE Les Bâtisseurs","Coop Avenir Vert"]):"",
+      credit:r(["Oui","Non","Non"]), encadrement:r(["Oui","Non"]), difficulte:r(["Accès aux intrants","Financement","Écoulement / transport","Ravageurs / maladies"]),
+      agent:r(["Agent Démo 1","Agent Démo 2"]), observations:"", photo:"", dateCreation:date.toISOString()
+    });
+  }
+  sauver(donnees); toast("40 agriculteurs de démonstration ajoutés"); afficher("tableau");
+};
+
+/* ================== DÉMARRAGE ================== */
+rendreTableau();
+</script>
+</body>
+</html>

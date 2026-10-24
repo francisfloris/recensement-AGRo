@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1f7a3f">
+<meta name="description" content="Recensement des agriculteurs – République du Congo">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="AgriRecensement">
+<title>AgriRecensement</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icons/favicon.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<!-- ================= CONNEXION ================= -->
+<div class="ecran" id="ecranLogin">
+  <form class="boite-login" id="formLogin">
+    <img src="/icons/icon-192.png" alt="" width="72" height="72">
+    <h1>AgriRecensement</h1>
+    <p class="org" data-org></p>
+    <p class="muted" data-campagne></p>
+    <label>Identifiant</label>
+    <input name="username" autocomplete="username" autocapitalize="none" required>
+    <label>Mot de passe</label>
+    <input name="password" type="password" autocomplete="current-password" required>
+    <div class="erreur" id="erreurLogin"></div>
+    <button class="btn btn-p btn-large" type="submit">Se connecter</button>
+    <p class="muted petit" style="margin-top:14px">Une connexion Internet est nécessaire pour la première connexion. Ensuite, l'application fonctionne hors ligne.</p>
+  </form>
+</div>
+
+<!-- ================= CHANGEMENT MOT DE PASSE OBLIGATOIRE ================= -->
+<div class="ecran" id="ecranMdp" hidden>
+  <form class="boite-login" id="formMdpForce">
+    <h1>🔐 Nouveau mot de passe</h1>
+    <p class="muted">Pour votre sécurité, choisissez un mot de passe personnel avant de continuer.</p>
+    <label>Mot de passe actuel</label><input name="current" type="password" required>
+    <label>Nouveau mot de passe (6 caractères min.)</label><input name="next" type="password" minlength="6" required>
+    <label>Confirmer</label><input name="confirm" type="password" minlength="6" required>
+    <div class="erreur" id="erreurMdpForce"></div>
+    <button class="btn btn-p btn-large" type="submit">Valider</button>
+  </form>
+</div>
+
+<!-- ================= APPLICATION ================= -->
+<div id="app" hidden>
+<header>
+  <img src="/icons/icon-192.png" alt="" class="logo">
+  <div class="titre"><b>AgriRecensement</b><small data-campagne></small></div>
+  <div class="entete-droite">
+    <button class="btn-entete" id="btnInstaller" hidden>📲 Installer</button>
+    <button class="pastille-sync" id="pastilleSync" title="Synchroniser maintenant"><span class="point"></span><span id="texteSync">…</span></button>
+    <span class="utilisateur" id="nomUtilisateur"></span>
+  </div>
+</header>
+<nav id="nav">
+  <button data-vue="tableau">📊 Tableau de bord</button>
+  <button data-vue="formulaire">➕ Recenser</button>
+  <button data-vue="liste">📋 Liste</button>
+  <button data-vue="carte">🗺️ Carte</button>
+  <button data-vue="cartes">🪪 Cartes agriculteurs</button>
+  <button data-vue="sync">🔄 Synchro & données</button>
+  <button data-vue="agents" data-role="admin superviseur">👥 Agents</button>
+  <button data-vue="compte">👤 Mon compte</button>
+</nav>
+
+<main>
+  <div class="bandeau" id="bandeauMaj" hidden>Une nouvelle version est disponible. <button class="btn btn-p btn-petit" id="btnMaj">Mettre à jour</button></div>
+
+  <!-- ===== TABLEAU DE BORD ===== -->
+  <section class="vue" id="vue-tableau">
+    <h2>Tableau de bord <small class="muted" id="portee"></small></h2>
+    <div class="stats" id="stats"></div>
+    <div class="grille2">
+      <div class="carte"><h3>Agriculteurs par département</h3><div id="g-dept"></div></div>
+      <div class="carte"><h3>Principales cultures</h3><div id="g-cultures"></div></div>
+      <div class="carte"><h3>Répartition par sexe</h3><div id="g-sexe"></div></div>
+      <div class="carte"><h3>Tranches d'âge</h3><div id="g-age"></div></div>
+      <div class="carte"><h3>Recensements des 14 derniers jours</h3><div id="g-jours"></div></div>
+      <div class="carte"><h3>Principales difficultés</h3><div id="g-diff"></div></div>
+      <div class="carte large" id="carteAgents" hidden><h3>Avancement par agent recenseur</h3><div id="tabAgents"></div></div>
+      <div class="carte"><h3>Derniers enregistrements</h3><div id="derniers"></div></div>
+    </div>
+  </section>
+
+  <!-- ===== FORMULAIRE ===== -->
+  <section class="vue" id="vue-formulaire">
+    <h2 id="titreForm">Nouvel agriculteur</h2>
+    <form id="form" novalidate>
+      <input type="hidden" name="uid">
+      <fieldset>
+        <legend>1. Identité</legend>
+        <div class="champs">
+          <div><label>Nom <span class="req">*</span></label><input name="nom" required></div>
+          <div><label>Prénom(s) <span class="req">*</span></label><input name="prenom" required></div>
+          <div><label>Sexe <span class="req">*</span></label>
+            <select name="sexe" required><option value="">— Choisir —</option><option>Masculin</option><option>Féminin</option></select></div>
+          <div><label>Date de naissance <span class="req">*</span></label><input type="date" name="naissance" required></div>
+          <div><label>N° pièce d'identité (CNI / passeport)</label><input name="piece"></div>
+          <div><label>Téléphone <span class="req">*</span></label><input type="tel" name="telephone" placeholder="06 123 45 67" required></div>
+          <div><label>Situation matrimoniale</label>
+            <select name="matrimonial"><option value="">—</option><option>Célibataire</option><option>Marié(e)</option><option>Union libre</option><option>Veuf(ve)</option><option>Divorcé(e)</option></select></div>
+          <div><label>Personnes à charge</label><input type="number" min="0" name="charges"></div>
+          <div><label>Niveau d'instruction</label>
+            <select name="instruction"><option value="">—</option><option>Aucun</option><option>Primaire</option><option>Secondaire</option><option>Supérieur</option><option>Formation agricole</option></select></div>
+        </div>
+        <div style="margin-top:12px">
+          <label>Photo de l'agriculteur (utilisée sur la carte)</label>
+          <div class="photo-zone">
+            <img id="apercuPhoto" alt="" hidden>
+            <label class="btn btn-s" style="margin:0">📷 Prendre / choisir une photo<input type="file" accept="image/*" capture="user" id="photoInput" hidden></label>
+            <button type="button" class="btn btn-s btn-petit" id="suppPhoto" hidden>Retirer</button>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>2. Localisation</legend>
+        <div class="champs">
+          <div><label>Département <span class="req">*</span></label><select name="departement" required id="selDept"></select></div>
+          <div><label>District / Arrondissement <span class="req">*</span></label><input name="district" required></div>
+          <div><label>Village / Quartier <span class="req">*</span></label><input name="village" required></div>
+          <div><label>Latitude</label><input name="lat" type="number" step="any" min="-6" max="5"></div>
+          <div><label>Longitude</label><input name="lng" type="number" step="any" min="10" max="20"></div>
+          <div class="boutons-gps">
+            <button type="button" class="btn btn-s" id="btnGPS">📍 Position GPS</button>
+            <button type="button" class="btn btn-s" id="btnChoisirCarte">🗺️ Choisir sur la carte</button>
+          </div>
+        </div>
+        <div class="muted petit" id="infoGPS"></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>3. Exploitation agricole</legend>
+        <div class="champs">
+          <div><label>Superficie totale (ha) <span class="req">*</span></label><input type="number" min="0" step="0.01" name="superficie" required></div>
+          <div><label>Superficie cultivée (ha)</label><input type="number" min="0" step="0.01" name="superficieCultivee"></div>
+          <div><label>Statut foncier</label>
+            <select name="foncier"><option value="">—</option><option>Propriétaire (titre foncier)</option><option>Propriété coutumière</option><option>Location</option><option>Métayage</option><option>Prêt / don</option></select></div>
+          <div><label>Années d'expérience</label><input type="number" min="0" name="experience"></div>
+          <div><label>Type d'activité</label>
+            <select name="activite"><option value="">—</option><option>Activité principale</option><option>Activité secondaire</option></select></div>
+          <div><label>Main-d'œuvre (nb de personnes)</label><input type="number" min="0" name="mainOeuvre"></div>
+          <div><label>Source d'eau</label>
+            <select name="eau"><option value="">—</option><option>Pluie uniquement</option><option>Rivière / marigot</option><option>Puits / forage</option><option>Irrigation aménagée</option></select></div>
+          <div><label>Destination de la production</label>
+            <select name="destination"><option value="">—</option><option>Autoconsommation</option><option>Vente</option><option>Mixte</option></select></div>
+        </div>
+        <div style="margin-top:14px"><label>Cultures pratiquées <span class="req">*</span></label><div class="cases" id="casesCultures"></div></div>
+        <div style="margin-top:14px"><label>Élevage</label><div class="cases" id="casesElevage"></div></div>
+        <div style="margin-top:14px"><label>Équipements</label><div class="cases" id="casesEquip"></div></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>4. Organisation & accompagnement</legend>
+        <div class="champs">
+          <div><label>Membre d'une coopérative / groupement ?</label>
+            <select name="cooperative"><option value="">—</option><option>Oui</option><option>Non</option></select></div>
+          <div><label>Nom de la coopérative</label><input name="nomCooperative"></div>
+          <div><label>Accès au crédit agricole ?</label>
+            <select name="credit"><option value="">—</option><option>Oui</option><option>Non</option></select></div>
+          <div><label>Encadrement technique reçu ?</label>
+            <select name="encadrement"><option value="">—</option><option>Oui</option><option>Non</option></select></div>
+          <div><label>Principale difficulté</label>
+            <select name="difficulte"><option value="">—</option><option>Accès aux intrants</option><option>Financement</option><option>Écoulement / transport</option><option>Accès à la terre</option><option>Ravageurs / maladies</option><option>Manque d'équipement</option><option>Climat</option></select></div>
+        </div>
+        <div style="margin-top:12px"><label>Observations</label><textarea name="observations" rows="3"></textarea></div>
+      </fieldset>
+
+      <div class="actions collant">
+        <button type="button" class="btn btn-s" id="btnAnnuler">Annuler</button>
+        <button type="submit" class="btn btn-p">💾 Enregistrer</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ===== LISTE ===== -->
+  <section class="vue" id="vue-liste">
+    <h2>Agriculteurs recensés</h2>
+    <div class="outils">
+      <input type="search" id="recherche" placeholder="🔍 Nom, téléphone, village, code…">
+      <select id="fDept"></select>
+      <select id="fSexe"><option value="">Tous sexes</option><option>Masculin</option><option>Féminin</option></select>
+      <select id="fCulture"></select>
+      <select id="fAgent" data-role="admin superviseur"></select>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th></th><th>Code</th><th>Nom & prénom</th><th>Sexe</th><th>Âge</th><th>Téléphone</th><th>Département</th><th>Village</th><th>Superficie</th><th data-role="admin superviseur">Agent</th><th>Sync</th><th></th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="pagination"></div>
+  </section>
+
+  <!-- ===== CARTE ===== -->
+  <section class="vue" id="vue-carte">
+    <h2>Carte des exploitations</h2>
+    <div class="outils">
+      <select id="mDept"></select>
+      <select id="mCulture"></select>
+      <select id="mCouleur">
+        <option value="sexe">Couleur : sexe</option>
+        <option value="culture">Couleur : culture principale</option>
+        <option value="superficie">Couleur : superficie</option>
+      </select>
+      <select id="mFond">
+        <option value="osm">Fond : plan (OpenStreetMap)</option>
+        <option value="sat">Fond : satellite</option>
+      </select>
+    </div>
+    <div id="carteInfo" class="muted petit" style="margin-bottom:8px"></div>
+    <div id="carteGrande"></div>
+    <div id="legende" class="legende"></div>
+  </section>
+
+  <!-- ===== CARTES AGRICULTEURS (PDF) ===== -->
+  <section class="vue" id="vue-cartes">
+    <h2>Cartes d'agriculteur (PDF avec QR code)</h2>
+    <div class="grille2">
+      <div class="carte">
+        <h3>Aperçu de la carte</h3>
+        <canvas id="apercuCarte" width="856" height="540"></canvas>
+        <p class="muted petit">Format carte bancaire (85,6 × 54 mm), 10 cartes par page A4 avec traits de coupe. Le QR code renvoie vers la page de vérification en ligne.</p>
+      </div>
+      <div class="carte">
+        <h3>Sélection</h3>
+        <div class="champs">
+          <div><label>Département</label><select id="cDept"></select></div>
+          <div><label>Statut d'impression</label>
+            <select id="cStatut"><option value="non">Jamais imprimées</option><option value="">Toutes</option><option value="oui">Déjà imprimées</option></select></div>
+          <div data-role="admin superviseur"><label>Agent</label><select id="cAgent"></select></div>
+          <div><label>Recherche</label><input id="cRecherche" placeholder="Nom, code, village…"></div>
+        </div>
+        <div class="selection-entete">
+          <label class="case-tout"><input type="checkbox" id="cTout"> Tout sélectionner</label>
+          <span id="cCompte" class="muted"></span>
+        </div>
+        <div class="liste-selection" id="cListe"></div>
+        <div class="actions" style="margin-top:12px">
+          <label class="case-tout"><input type="checkbox" id="cVerso" checked> Inclure le verso (consignes)</label>
+          <button class="btn btn-p" id="btnPDF">🖨️ Générer le PDF</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SYNCHRO & DONNÉES ===== -->
+  <section class="vue" id="vue-sync">
+    <h2>Synchronisation & données</h2>
+    <div class="grille2">
+      <div class="carte">
+        <h3>🔄 Synchronisation avec le serveur central</h3>
+        <div id="etatSync" class="etat-sync"></div>
+        <button class="btn btn-p" id="btnSync">Synchroniser maintenant</button>
+        <p class="muted petit" style="margin-top:10px">La synchronisation est automatique dès que le réseau est disponible (au démarrage, toutes les 2 minutes et après chaque enregistrement).</p>
+      </div>
+      <div class="carte">
+        <h3>📲 Installer l'application</h3>
+        <p class="muted petit">Installée, l'application s'ouvre comme une application normale, sans barre d'adresse, et fonctionne sans réseau.</p>
+        <button class="btn btn-p" id="btnInstaller2" hidden>📲 Installer sur cet appareil</button>
+        <div id="infoInstall" class="petit" style="margin-top:8px"></div>
+      </div>
+      <div class="carte">
+        <h3>📤 Exporter</h3>
+        <p class="muted petit">Exporte les données visibles sur cet appareil.</p>
+        <div class="outils"><button class="btn btn-p" id="expCSV">CSV (Excel)</button><button class="btn btn-s" id="expJSON">Sauvegarde JSON</button></div>
+      </div>
+      <div class="carte">
+        <h3>📥 Importer une sauvegarde JSON</h3>
+        <p class="muted petit">Utile pour transférer des fiches sans réseau (clé USB, Bluetooth…). Les fiches importées seront envoyées au serveur à la prochaine synchronisation.</p>
+        <input type="file" accept=".json,application/json" id="impJSON">
+      </div>
+      <div class="carte">
+        <h3>🧪 Données de démonstration</h3>
+        <p class="muted petit">Crée 40 agriculteurs fictifs avec coordonnées GPS pour tester la carte et les cartes PDF.</p>
+        <button class="btn btn-s" id="btnDemo">Générer des données de test</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== AGENTS (ADMIN) ===== -->
+  <section class="vue" id="vue-agents">
+    <h2>Agents recenseurs & utilisateurs</h2>
+    <div class="carte" data-role="admin">
+      <h3>➕ Créer un compte</h3>
+      <form id="formAgent" class="champs">
+        <div><label>Nom complet *</label><input name="name" required></div>
+        <div><label>Identifiant de connexion *</label><input name="username" required autocapitalize="none" placeholder="ex. jmabiala"></div>
+        <div><label>Mot de passe provisoire *</label><input name="password" required minlength="6"></div>
+        <div><label>Rôle</label><select name="role"><option value="agent">Agent recenseur</option><option value="superviseur">Superviseur</option><option value="admin">Administrateur</option></select></div>
+        <div><label>Code agent (auto si vide)</label><input name="agentCode" placeholder="ex. A012" maxlength="6"></div>
+        <div><label>Zone d'affectation</label><input name="zone" placeholder="ex. Kouilou – Hinda"></div>
+        <div><label>Téléphone</label><input name="phone"></div>
+        <div style="display:flex;align-items:flex-end"><button class="btn btn-p" type="submit">Créer le compte</button></div>
+      </form>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Nom</th><th>Identifiant</th><th>Code</th><th>Rôle</th><th>Zone</th><th>Fiches</th><th>Dernière synchro</th><th>Statut</th><th data-role="admin"></th></tr></thead>
+        <tbody id="tbodyAgents"></tbody>
+      </table>
+    </div>
+    <div class="carte" data-role="admin" style="margin-top:16px">
+      <h3>⚙️ Paramètres des cartes</h3>
+      <form id="formConfig" class="champs">
+        <div><label>Organisme émetteur</label><input name="orgName"></div>
+        <div><label>Nom de la campagne</label><input name="campaign"></div>
+        <div style="display:flex;align-items:flex-end"><button class="btn btn-p" type="submit">Enregistrer</button></div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ===== COMPTE ===== -->
+  <section class="vue" id="vue-compte">
+    <h2>Mon compte</h2>
+    <div class="grille2">
+      <div class="carte"><h3>Informations</h3><div id="infosCompte" class="fiche"></div></div>
+      <div class="carte">
+        <h3>Changer de mot de passe</h3>
+        <form id="formMdp">
+          <label>Mot de passe actuel</label><input name="current" type="password" required>
+          <label style="margin-top:8px">Nouveau mot de passe</label><input name="next" type="password" minlength="6" required>
+          <label style="margin-top:8px">Confirmer</label><input name="confirm" type="password" minlength="6" required>
+          <button class="btn btn-p" style="margin-top:12px">Modifier</button>
+        </form>
+      </div>
+      <div class="carte">
+        <h3>Déconnexion</h3>
+        <p class="muted petit">Les fiches non synchronisées doivent être envoyées avant de vous déconnecter. Les données locales sont effacées de l'appareil à la déconnexion.</p>
+        <button class="btn btn-d" id="btnLogout">Se déconnecter</button>
+      </div>
+    </div>
+  </section>
+</main>
+</div>
+
+<!-- Modals -->
+<div class="modal-fond" id="modal"><div class="modal" id="modalContenu"></div></div>
+<div class="modal-fond" id="modalCarte"><div class="modal modal-carte">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><h3 style="margin:0">Touchez la carte pour placer l'exploitation</h3><button class="btn btn-s btn-petit" id="fermerPicker">✕</button></div>
+  <div id="cartePicker"></div>
+  <div class="actions" style="margin-top:10px"><span class="muted petit" id="coordPicker" style="margin-right:auto"></span><button class="btn btn-p" id="validerPicker">Valider cette position</button></div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script src="/vendor/leaflet/leaflet.js"></script>
+<script src="/vendor/qrcode.js"></script>
+<script src="/vendor/jspdf.umd.min.js"></script>
+<script src="/js/store.js"></script>
+<script src="/js/map.js"></script>
+<script src="/js/cards.js"></script>
+<script src="/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "AgriRecensement – Recensement des agriculteurs",
+  "short_name": "AgriRecensement",
+  "description": "Recensement des agriculteurs, hors ligne, avec synchronisation, carte et cartes d'agriculteur à QR code.",
+  "lang": "fr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f5f7f4",
+  "theme_color": "#1f7a3f",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Nouvel agriculteur", "url": "/#formulaire", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Carte", "url": "/#carte", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
